@@ -1,0 +1,138 @@
+# Initialization
+
+open data.gdt
+EUA=EUAEUR*CZKEUR
+CER=CEREUR*CZKEUR
+logs EUA CER
+diff l_EUA
+diff l_CER
+smpl 2000:01 2013:10
+diff DLOUHE
+diff PLOCHE
+
+#summary statistics (Tables 1 and 2)
+summary d_l_EUA d_l_CER 
+summary PLOCHE DLOUHE
+
+
+# Models selection
+
+# Allowances (Sec 4.1)
+
+#EUA
+
+#benchmark model
+
+NEUA <- arima 0 0 0; d_l_EUA --quiet
+
+#raw models
+
+arima 2 0 2 ; d_l_EUA 0 d_l_CER(-1 to -2) 
+
+garch 1 1 ; d_l_EUA d_l_CER(-1 to -2) 
+
+# definite models (after removing coefs. insignificant in raw models)
+
+# definite ARMA model (its Akaiake criterion->Appendix C)
+ACEUA <- arima 0 0 0 ; d_l_EUA d_l_CER(-1) --quiet
+#percentage improvement (->Appendix C)
+ACEUAR=1-sqrt(var($uhat)/var(d_l_EUA))
+
+# definite GARCH model (see above) 
+GCEUA <- garch 1 1 ; d_l_EUA d_l_CER(-1) --quiet
+GCEUAR=1-sqrt(var($uhat)/var(d_l_EUA))
+
+normtest d_l_EUA
+
+# CER
+
+NCER <- arima 0 0 0; d_l_CER  --quiet
+
+#raw
+arima 2 0 2 ; d_l_CER d_l_EUA(-1 to -2) 
+
+garch 1 1 ; d_l_CER d_l_EUA(-1 to -2) 
+
+#definite
+
+ACCER <- arima 0 0 0 ; d_l_CER d_l_EUA(-1) --quiet
+ACCERR=1-sqrt(var($uhat)/var(d_l_CER))
+
+GCCER <- garch 1 1 ; d_l_CER --quiet
+GCCERR=1-sqrt(var($uhat)/var(d_l_CER))
+
+normtest d_l_CER
+
+#Overall demands (Sec 4.2)
+
+# FLAT
+
+NPLOCHE <- arima 0 0 0 ; PLOCHE --quiet
+
+arima 2 0 2 ; PLOCHE 0 DLOUHE(-1 to -2) 
+
+garch 1 1 ; PLOCHE DLOUHE(-1) d_DLOUHE(-1) 
+
+#definite
+
+GCPLOCHE <- garch 1 1 ; PLOCHE DLOUHE(-1) --quiet
+GCPLOCHER = 1- sqrt(var($uhat)/var(PLOCHE))
+
+ACPLOCHE <- arima {2} 0 2 ; PLOCHE  --quiet
+ACPLOCHE_RES = $uhat
+ACPLOCHER = 1- sqrt(var($uhat)/var(PLOCHE))
+
+#forecast of Flat
+fcast PLOCH_FRC
+series PLOCH_FRC_ERR = $fcerr
+
+normtest ACPLOCHE_RES
+
+# LONG
+
+NDLOUHE <- arima 0 0 0 ; DLOUHE 
+
+arima 2 0 2 ; DLOUHE PLOCHE(-1 to -2)
+
+GDLOUHE <- garch 1 1 ; DLOUHE PLOCHE(-1 to -2) --quiet
+GDLOUHER = 1- sqrt(var($uhat)/var(DLOUHE))
+
+# Definite (only ARMA, GDLOUHE is already definite)
+
+
+# (a variant of PLOCHE with forecasts used in order to ACDLOUHE to 
+# be able to make forecast)
+series PLOCH_VAR = PLOCH_FRC
+loop i=1..lastobs(PLOCHE) --quiet
+   PLOCH_VAR[i]=PLOCHE[i]
+endloop
+
+ACDLOUHE <- arima {2} 0 {2} ; DLOUHE PLOCH_VAR(-1 to -2) --quiet
+ACDLOUHE_RES = $uhat
+ACDLOUHER = 1- sqrt(var($uhat)/var(DLOUHE))
+
+#forecast of LONG
+fcast DLOUH_FRC
+series DLOUH_FRC_ERR = $fcerr
+normtest ACDLOUHE_RES
+
+# Forecasts of demands (->Sec 4.2)
+
+MEANPLOCHE=PLOCH_FRC[lastobs(PLOCH_FRC)]
+MEANDLOUHE=DLOUH_FRC[lastobs(DLOUH_FRC)]
+STDPLOCHE=PLOCH_FRC_ERR[lastobs(PLOCH_FRC_ERR)]
+STDDLOUHE=DLOUH_FRC_ERR[lastobs(DLOUH_FRC_ERR)]
+
+# Correlations (Sec 4.3)
+
+# correlation between S's (->Table 3)
+
+smpl firstobs(PLOCHE) lastobs(PLOCHE)
+
+corr PLOCHE DLOUHE
+
+#remaining correlations
+
+smpl firstobs(d_l_EUA) lastobs(ACDLOUHE_RES) 
+corr PLOCHE DLOUHE d_l_EUA d_l_CER
+
