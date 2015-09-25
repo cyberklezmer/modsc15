@@ -14,6 +14,5 @@ Only computations involving non-confidential data are described here
 
 3. Resulting values were imposed into `computations.ods` (see `Legend` sheet)
     
-4. `R/stript.R` was modified by means of results from `computations.ods#computations` and 
- and run to produce `sample.csv`, serving as input of an optimization.
+4. `R/stript.R` was modified by means of results from `computations.ods#computations` and run to produce `sample.csv`, serving as input of an optimization.
 
