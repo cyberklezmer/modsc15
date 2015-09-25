@@ -8,7 +8,7 @@ Only computations involving non-confidential data are described here
 
 ## Description of Computations
 
-1. Contents of files `input/odbyty.gdt` and `input/puvolenky.ods` were manually combined into `gretl/data.gdt`
+1. Contents of files `input/odbyty.gdt` (not included here) and `input/puvolenky.ods` were manually combined into `gretl/data.gdt` (the version present here is without the overall demands - variables PLOCHE a DLOUHE - due to confidential status of this data)
 
 2. `gretl/analysis.inp` was run
 
